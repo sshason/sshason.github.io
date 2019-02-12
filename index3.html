@@ -1,0 +1,178 @@
+<html>
+    <body>
+        <div id="result"></div>
+        <canvas id="c1" width="1400px" height="700px" style="width:1400px; height: 700px;">
+        </canvas>
+    
+<script>
+"use strict";
+
+const H = 20;
+const W = 30;
+const COLS = 28;
+const ROWS = 30;
+const CELLS = ROWS * COLS;
+const REPEAT = 1000;
+
+// cells text model indices
+const X = 0;
+const Y = 1;
+const TEXT = 2;
+const COLOR = 3;
+
+// cells background model incices
+const BG_COLOR = 2;
+
+const COLORS = ["darkred", "black", "blue"];
+const BG_COLORS = ["orange", "lightgreen", "lime", "white", "lightgray", "gray"];
+
+const cellsTextModel = new Array(CELLS);
+const cellsBackgroundModel = new Array(CELLS);
+const rowsModel = new Array(ROWS);
+const colsModel = new Array(COLS);
+
+function buildRenderingModel() {
+    let i = 0;
+    for(let r=0; r < ROWS; r++) {
+        for(let c=0; c < COLS; c++, i++) {
+            const str = i + "";
+            cellsTextModel[i] = [
+                c * W, // X
+                r * H,  // Y
+                str,  // TEXT
+                i % COLORS.length // COLOR
+            ];
+
+            cellsBackgroundModel[i] = [
+                c * W, // X
+                r * H,  // Y
+                i % BG_COLORS.length // BG_COLOR 
+            ];
+
+
+        }
+    }
+
+
+    // sort by color to avoid unnecesary fillStyle switch
+    cellsTextModel.sort(function(a, b) {
+        return a[COLOR] - b[COLOR];
+    });
+
+    cellsBackgroundModel.sort(function(a, b) {
+        return a[BG_COLOR] - b[BG_COLOR];
+    });
+
+    for(let r=0; r < ROWS; r++) {
+        rowsModel[r] = r * H;
+    }
+
+    for(let c=0; c < COLS; c++) {
+        colsModel[c] = c * W;
+    }
+}
+
+function renderCellBackground(ctx) {
+    let curColor = null;
+
+    for(let i=0; i < CELLS; i++) {
+        const cell = cellsBackgroundModel[i]; 
+        const x = cell[X];
+        const y = cell[Y];
+        const color = cell[BG_COLOR];
+        if(color != curColor) {
+             // only set color if color has changed
+             ctx.fillStyle = BG_COLORS[color];
+             curColor = color;
+        }
+        ctx.fillRect(x, y, W, 20);
+    }
+}
+
+function renderCellsText(ctx) {
+    let curColor = null;
+
+    for(let i=0; i < CELLS; i++) {
+        const cell = cellsTextModel[i]; 
+        const str = cell[TEXT];
+        const x = cell[X];
+        const y = cell[Y] - 5 + H; // v-center text - adjust to row height
+        const color = cell[COLOR];
+        if(color != curColor) {
+            // only set color if color has changed
+            ctx.fillStyle = COLORS[color];
+            curColor = color;
+        }
+        // ctx.measureText(str); // very expensive for each cell so we should avoid if possible
+        ctx.fillText(str, x, y);
+    }
+}
+
+function renderGridLines(ctx) {
+    ctx.strokeStyle = "gray";
+
+    for(let r=0; r < ROWS; r++) {
+        const y = rowsModel[r];
+        const x = W * COLS;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+
+    for(let c=0; c < COLS; c++) {
+        const x = colsModel[c];
+        const y = H * ROWS;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+}
+
+function renderBlock(ctx) {
+    renderCellBackground(ctx);
+    renderCellsText(ctx);
+    renderGridLines(ctx);
+}
+
+function test1() {
+    const c = document.getElementById("c1");
+    const ctx = c.getContext("2d");
+
+    const ratio = window.devicePixelRatio;
+    // c.width = c.width * ratio;
+    // c.height = c.height * ratio;
+
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    ctx.font = '12px arial';
+
+    const start = performance.now();
+    renderBlock(ctx);
+    const end = performance.now();
+    const elapsed = end - start;
+
+    //console.log("fillText: " + elapsed + "ms");
+    return elapsed;
+}
+
+buildRenderingModel();
+
+// run perf test
+var total1 = 0;
+for(let i=0; i < REPEAT; i++) {
+    const elapsed1 = test1();
+    total1 += elapsed1;
+}
+
+const test1Avg = (total1 / REPEAT).toFixed(3);
+const opsPerSec = (1000 / test1Avg).toFixed(1);
+console.log("test1 avg: " + test1Avg);
+
+document.getElementById("result");
+result.innerText = "test1 avg: " + test1Avg + "ms , ops/sec: " + opsPerSec;
+</script>
+
+</body>
+</html>
