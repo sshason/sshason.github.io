@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" dir="rtl" lang="he" xml:lang="he">
+<head>
+<!-- New Site -->
+<!--meta http-equiv="Content-Language" content="he"/-->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="keywords" content="Abandonware,Old Games,משחקים ישנים,משחקי נוסטלגיה,משחקי וידאו,משחקים קלאסיים,משחקים נוסטלגיים,משחק,הורדה,צ'יטים,קודים,חינם,הורדות"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta property="og:type" content="game" />
+<meta property="og:site_name" content="מסע אל העבר" />
+<link href="/public/gzip/css/64/masa.css" type="text/css" rel="StyleSheet"/>
+<link href="/public/gzip/css/5/thickBox.css" type="text/css" rel="StyleSheet"/>
+<script src="/public/gzip/js/jquery-3.5.1.min.js"></script>
+
+</head>
+
+<body>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+
+function dosbox_js_callback() {
+	hideLoader();
+}
+
+function hideLoader() {
+	setTimeout(function(){$('#dosBoxLoader').hide();$('#dosBoxIframe').hide();}, 1000);
+}
+
+$(document).ready(function() {
+	screenWidth();
+	setTimeout(hideLoader, 14000);
+	$("#dosBoxAppOL").html("אונליין<sup>בטא</sup>");
+});
+
+/* ]]> */
+</script>
+
+<div id="dosBoxAppWrapper">
+	<p id="dosBoxAppMsg">&nbsp;</p>
+	<div id="dosBoxApp">
+
+		<canvas id="canvas" style="width: 640px; height: 480px; display: block; margin: 0 auto;"></canvas>
+		
+		<script type="text/javascript" src="/public/dosbox/es6-promise.js"></script>
+		<script type="text/javascript" src="/public/dosbox/browserfs.js"></script>
+		<script type="text/javascript" src="/public/dosbox/loader.js"></script>
+		<script type="text/javascript">
+			const urlParams = new URLSearchParams(window.location.search);
+			const gameName = urlParams.get('game');
+			const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+			const screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+			console.log(screenWidth, screenHeight);
+			var emulator = new Emulator(document.querySelector("#canvas"),
+							null,
+							/*new DosBoxLoader(DosBoxLoader.emulatorJS("/dosbox/emulators/em-dosbox/dosbox-sync.js"),*/
+							new DosBoxLoader(DosBoxLoader.emulatorJS("/public/dosbox/emulators/em-dosbox/temp-dosbox-archive.js"),
+								DosBoxLoader.locateAdditionalEmulatorJS(locateAdditionalFiles),
+								DosBoxLoader.nativeResolution(640, 480),
+								// DosBoxLoader.nativeResolution(screenWidth, screenHeight),
+								DosBoxLoader.mountZip("c",
+								DosBoxLoader.fetchFile("קובץ המשחק",
+								`/public/games/${gameName}.zip`)),
+								DosBoxLoader.startExe(`${gameName}/Go.bat`)));
+			emulator.setSplashImage("/public/dosbox/images/dosbox.png");
+			emulator.setCallbacks(dosbox_js_callback);
+			emulator.start({ waitAfterDownloading: false });
+			// setTimeout(() => {requestFullScreen();}, 10000);
+
+			function locateAdditionalFiles(filename) 
+			{
+				if (filename === "dosbox.html.mem") 
+				{
+					return "/public/dosbox/emulators/em-dosbox/dosbox-sync.mem";
+				}
+				return "/public/dosbox/"+ filename;
+			}
+
+			function requestFullScreen() {
+				var canvas = document.querySelector("#canvas");
+				if (canvas.requestFullscreen) {
+					canvas.requestFullscreen();
+				} else if (canvas.mozRequestFullScreen) { /* Firefox */
+					canvas.mozRequestFullScreen();
+				} else if (canvas.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+					canvas.webkitRequestFullscreen();
+				} else if (canvas.msRequestFullscreen) { /* IE/Edge */
+					canvas.msRequestFullscreen();
+				}
+			};
+
+		</script>
+		 <!--div style="width:640px; height: 400px; background: blue; margin: 0 auto;"></div--> 
+	</div>
+	<!--iframe id="dosBoxIframe" style="height: 1px;"></iframe-->
+	<!--iframe id="dosBoxIframe2" class="TB_hideObjects" style="display:none; height: 1px"></iframe-->
+
+	
+	<a href="javascript:void(0)" onclick="requestFullScreen();">
+		מסך מלא
+	</a>
+</div>
+
+<script src="/public/gzip/js/12/common.js"></script>
+<script src="/public/gzip/js/15/thickBox.js"></script>
+
+</body>
+</html>
